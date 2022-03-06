@@ -9,6 +9,10 @@ mod filerow;
 use gtk::prelude::*;
 use gtk::gio;
 use gtk::{Application, ApplicationWindow, Paned, Label, Orientation, ScrolledWindow, ListView, ColumnView, ColumnViewColumn, SingleSelection, ListBox, Widget};
+use gtk::builders::ColumnViewColumnBuilder;
+
+use std::fs;
+use std::fs::DirEntry;
 
 //use integer_object::IntegerObject;
 use filerow::FsItem;
@@ -30,7 +34,11 @@ fn build_ui(app: &Application) {
     let left_side = Side::new();
     let right_side = Side::new();
 
-    let _ = left_side.clear();
+    for path in fs::read_dir("/").unwrap() {
+        left_side.add(path.unwrap());
+    }
+
+    //let _ = left_side.clear();
 
     let paned = Paned::builder()
         .start_child(&left_side.widget())
@@ -55,7 +63,6 @@ fn build_ui(app: &Application) {
 #[derive(Debug)]
 pub struct Side {
     model: gio::ListStore,
-    widget_factory: gtk::SignalListItemFactory,
     widget: ScrolledWindow,
 }
 
@@ -78,7 +85,23 @@ impl Side {
 
         let selection_model = SingleSelection::new(Some(&model));
         let view = ColumnView::new(Some(&selection_model));
-        view.append_column(&ColumnViewColumn::new(Some("title"), Some(&widget_factory)));
+        
+        let columnviewcolumn_name = ColumnViewColumnBuilder::new()
+            .expand(true)
+            .title("Name")
+            .resizable(true)
+            .factory(&widget_factory)
+            .build();
+
+        let columnviewcolumn_last_modified = ColumnViewColumnBuilder::new()
+            .expand(false)
+            .title("Last Modified")
+            .resizable(true)
+            .factory(&widget_factory)
+            .build();
+
+        view.append_column(&columnviewcolumn_name);
+        view.append_column(&columnviewcolumn_last_modified);
 
         let widget = ScrolledWindow::builder()
             .min_content_width(360)
@@ -87,7 +110,6 @@ impl Side {
 
         Self {
             model: model,
-            widget_factory: widget_factory,
             widget: widget,
         }
     }
@@ -98,6 +120,12 @@ impl Side {
 
     fn clear(&self) {
         &self.model.remove_all();
+    }
+    
+    fn add(&self, path: DirEntry) {
+        let path_string = path.file_name().into_string().unwrap();
+        let fsitem = FsItem::new(path_string, String::from("last_modified test"));
+        self.model.append(&fsitem);
     }
 }
 

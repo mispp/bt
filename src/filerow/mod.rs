@@ -12,7 +12,7 @@ glib::wrapper! {
 
 impl FsItem {
     pub fn new(name: String, last_modified: String) -> Self {
-        Object::new(&[("name", &name), ("last_modified", &last_modified)]).expect("Failed to create `FsItem`.")
+        Object::new(&[("name", &name), ("lastmodified", &last_modified)]).expect("Failed to create `FsItem`.")
     }
 }
 

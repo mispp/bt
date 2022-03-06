@@ -4,13 +4,13 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use once_cell::sync::Lazy;
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 
 
 #[derive(Default)]
 pub struct FsItem {
-    name: Cell<String>,
-    last_modified: Cell<String>,
+    name: RefCell<String>,
+    last_modified: RefCell<String>,
 }
 
 
@@ -35,9 +35,9 @@ impl ObjectImpl for FsItem {
                     ParamFlags::READWRITE, // The property can be read and written to
                 ),
                 ParamSpecString::new(
-                    "last_modified", // Name
-                    "last_modified", // Nickname
-                    "last_modified", // Short description
+                    "lastmodified", // Name
+                    "lastmodified", // Nickname
+                    "lastmodified", // Short description
                     None, // Default value
                     ParamFlags::READWRITE, // The property can be read and written to
                 )
@@ -52,7 +52,7 @@ impl ObjectImpl for FsItem {
                 let name = value.get().expect("The value needs to be of type `String`.");
                 self.name.replace(name);
             },
-            "last_modified" => {
+            "lastmodified" => {
                 let last_modified = value.get().expect("The value needs to be of type `String`.");
                 self.last_modified.replace(last_modified);
             },
@@ -62,8 +62,8 @@ impl ObjectImpl for FsItem {
 
     fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> Value {
         match pspec.name() {
-            "name" => self.name.get().to_value(),
-            "last_modified" => self.last_modified.get().to_value(),
+            "name" => self.name.borrow().to_value(),
+            "lastmodified" => self.last_modified.borrow().to_value(),
             _ => unimplemented!(),
         }
     }

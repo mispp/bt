@@ -14,8 +14,14 @@ use gtk::builders::ColumnViewColumnBuilder;
 use std::fs;
 use std::fs::DirEntry;
 
+
 //use integer_object::IntegerObject;
-use filerow::FsItem;
+use filerow::ModelItem;
+use filerow::FsEntry;
+use filerow::EntryType;
+//use filerow::DirEntryBoxed;
+
+
 
 fn main() {
     let app = Application::builder()
@@ -34,11 +40,8 @@ fn build_ui(app: &Application) {
     let left_side = Side::new();
     let right_side = Side::new();
 
-    for path in fs::read_dir("/").unwrap() {
-        left_side.add(path.unwrap());
-    }
-
-    //let _ = left_side.clear();
+    left_side.populate_for_path(&String::from("/"));
+    right_side.populate_for_path(&String::from("/var"));
 
     let paned = Paned::builder()
         .start_child(&left_side.widget())
@@ -69,7 +72,7 @@ pub struct Side {
 impl Side {
     fn new() -> Self {
         //let model = gio::ListStore::new(IntegerObject::static_type());
-        let model = gio::ListStore::new(FsItem::static_type());
+        let model = gio::ListStore::new(ModelItem::static_type());
         let widget_factory = gtk::SignalListItemFactory::new();
 
         widget_factory.connect_setup(move |_, list_item| {
@@ -79,7 +82,7 @@ impl Side {
             // Bind `list_item->item->number` to `label->label`
             list_item
                 .property_expression("item")
-                .chain_property::<FsItem>("name")
+                .chain_property::<ModelItem>("name")
                 .bind(&label, "label", Widget::NONE);
         });
 
@@ -123,9 +126,51 @@ impl Side {
     }
     
     fn add(&self, path: DirEntry) {
-        let path_string = path.file_name().into_string().unwrap();
-        let fsitem = FsItem::new(path_string, String::from("last_modified test"));
-        self.model.append(&fsitem);
+        let md = path.metadata().unwrap();
+
+        let filetype =
+            if md.is_file() {
+                EntryType::FILE
+            }
+            else if md.is_dir() {
+                EntryType::DIRECTORY
+            }
+            else if md.is_symlink() {
+                EntryType::SYMLINK
+            }
+            else {
+                EntryType::UNKNOWN
+            };
+
+        let name = match path.file_name().to_str() {
+            Some(name) => name.to_string(),
+            None => String::from("n/a"),
+        };
+
+        let path = match path.path().to_str() {
+            Some(path) => path.to_string(),
+            None => String::from("n/a"),
+        };
+
+        let fse = FsEntry {
+            name: name,
+            path: path,
+            last_modified: Some(md.modified().unwrap()),
+            size: md.len(),
+            entry_type: Some(filetype),
+        };
+
+        let fsi = ModelItem::new(&fse, false);
+
+        self.model.append(&fsi);
+    }
+
+    fn populate_for_path(&self, path: &String) {
+        let _ = self.clear();
+
+        for path in fs::read_dir(path).unwrap() {
+            self.add(path.unwrap());
+        }
     }
 }
 

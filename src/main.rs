@@ -6,6 +6,7 @@
 //mod integer_object;
 mod filerow;
 
+
 use gtk::prelude::*;
 use gtk::gio;
 use gtk::{Application, ApplicationWindow, Paned, Label, Orientation, ScrolledWindow, ListView, ColumnView, ColumnViewColumn, SingleSelection, ListBox, Widget};
@@ -17,8 +18,8 @@ use std::fs::DirEntry;
 
 //use integer_object::IntegerObject;
 use filerow::ModelItem;
-use filerow::FsEntry;
-use filerow::EntryType;
+use filerow::imp::FsEntry;
+use filerow::imp::EntryType;
 //use filerow::DirEntryBoxed;
 
 
@@ -152,6 +153,7 @@ impl Side {
             None => String::from("n/a"),
         };
 
+        /*
         let fse = FsEntry {
             name: name,
             path: path,
@@ -159,6 +161,9 @@ impl Side {
             size: md.len(),
             entry_type: Some(filetype),
         };
+        */
+
+        let fse = FsEntry::new(name, path, md.modified().unwrap(), md.len(), filetype);
 
         let fsi = ModelItem::new(&fse, false);
 

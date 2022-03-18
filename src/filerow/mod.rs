@@ -1,4 +1,4 @@
-mod imp;
+pub mod imp;
 
 use gtk::glib;
 use gtk::prelude::*;
@@ -11,6 +11,7 @@ use glib::Type;
 
 use std::time::SystemTime;
 
+/*
 pub enum EntryType {
     FILE,
     DIRECTORY,
@@ -26,6 +27,7 @@ pub struct FsEntry {
     size: u64,
     entry_type: Option<EntryType>,
 }
+*/
 
 
 glib::wrapper! {
@@ -34,7 +36,7 @@ glib::wrapper! {
 
 
 impl ModelItem {
-    pub fn new(entry: &FsEntry, selected: bool) -> Self {
+    pub fn new(entry: &imp::FsEntry, selected: bool) -> Self {
         Object::new(&[("entry", &entry), ("selected", &selected)]).expect("Failed to create `ModelItem`.")
     }
 }

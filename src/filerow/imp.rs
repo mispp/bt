@@ -24,7 +24,7 @@ pub enum EntryType {
 }
 
 
-#[derive(Default, Clone, Boxed)]
+#[derive(Clone, Default, Boxed)]
 #[boxed_type(name = "FsEntry")]
 pub struct FsEntry {
     name: String,
@@ -34,20 +34,23 @@ pub struct FsEntry {
     entry_type: Option<EntryType>,
 }
 
-
-/*
-#[derive(Default)]
-pub struct FsItem {
-    entry: Cell<DirEntry>,
-    selected: bool,
+impl FsEntry {
+    pub fn new(name: String, path: String, last_modified: SystemTime, size: u64, entry_type: EntryType) -> Self {
+        FsEntry {
+            name: name,
+            path: path,
+            last_modified: Some(last_modified),
+            size: size,
+            entry_type: Some(entry_type),
+        }
+    }
 }
-*/
+
 
 #[derive(Default)]
 pub struct ModelItem {
-    //entry: RefCell<DirEntry>,
     entry: RefCell<FsEntry>,
-    selected: bool,
+    selected: Cell<bool>,
 }
 
 
@@ -68,7 +71,7 @@ impl ObjectImpl for ModelItem {
                     "entry", // Name
                     "entry", // Nickname
                     "entry", // Short description
-                    Type::BOXED, // Default value
+                    Type::OBJECT, // Type
                     ParamFlags::READWRITE, // The property can be read and written to
                 ),
                 ParamSpecBoolean::new(
@@ -91,7 +94,7 @@ impl ObjectImpl for ModelItem {
             },
             "selected" => {
                 let selected = value.get().expect("The value needs to be of type `bool`.");
-                self.selected = selected;
+                self.selected.replace(selected);
             },
             _ => unimplemented!(),
         }
@@ -99,8 +102,8 @@ impl ObjectImpl for ModelItem {
 
     fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> Value {
         match pspec.name() {
-            "entry" => self.entry.borrow().to_value(),
-            "selected" => self.selected.to_value(),
+            "entry" => self.entry.get().to_value(),
+            "selected" => self.selected.get().to_value(),
             _ => unimplemented!(),
         }
     }

@@ -9,8 +9,7 @@ use std::cell::{Cell, RefCell};
 
 use glib::prelude::*;
 use glib::subclass::prelude::*;
-use glib::Boxed;
-use glib::Type;
+use glib::{Boxed, SharedBoxed, Type};
 use std::default::Default;
 use std::time::SystemTime;
 
@@ -71,7 +70,7 @@ impl ObjectImpl for ModelItem {
                     "entry", // Name
                     "entry", // Nickname
                     "entry", // Short description
-                    Type::OBJECT, // Type
+                    FsEntry::static_type(), // Type
                     ParamFlags::READWRITE, // The property can be read and written to
                 ),
                 ParamSpecBoolean::new(
@@ -102,7 +101,7 @@ impl ObjectImpl for ModelItem {
 
     fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> Value {
         match pspec.name() {
-            "entry" => self.entry.get().to_value(),
+            "entry" => self.entry.borrow().to_value(),
             "selected" => self.selected.get().to_value(),
             _ => unimplemented!(),
         }
